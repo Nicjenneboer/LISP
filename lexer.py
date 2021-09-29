@@ -1,13 +1,15 @@
+
+from ast import parse
 import re
 
 class Token():
     
     def __init__(self, t_type, t_value):
-        self.t_type = t_type
-        self.t_value = t_value
+        self.token_type = t_type
+        self.token_value = t_value
 
     def __str__(self):
-        return "Token Type = '%s', Token Value = '%s'" % (self.t_type, self.t_value) 
+        return "'%s'" % (self.token_value) 
 
     def __repr__(self):
         return self.__str__()
@@ -41,12 +43,27 @@ class lexer():
 
     def tokenizer(self):
         tokens = map(self.assigntoken, self.elements)
+
         return list(tokens)
 
+class parser():
+    def __init__(self, tokens):
+        self.tokens = tokens
+
+    def make_lst(self, index=0, lst=[]):
+        if self.tokens[index].token_type == 'O_BRACKET':
+            tmp_lst, index = self.make_lst(index+1, lst=[])
+            lst += tmp_lst
+            if len(self.tokens) > index+1:
+                return self.make_lst(index+1, lst)
+        elif self.tokens[index].token_type == 'C_BRACKET':
+            return [lst], index
+        else:
+            return self.make_lst(index+1, lst+[self.tokens[index]])
+        return lst
+   
 
 
-
-            
 
 def main():
     while True:
@@ -54,7 +71,9 @@ def main():
         Lexer = lexer(code)
         Lexer.splitcode()
         result = Lexer.tokenizer()
-        print(result)
+        Parser = parser(result)
+        parse_list = Parser.make_lst()
+        print(parse_list)
 
 
 if __name__ == '__main__':

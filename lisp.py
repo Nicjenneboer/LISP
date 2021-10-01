@@ -6,13 +6,13 @@ def main(commandline=True, file=None):
         while True:
             code = input('lisp: ')
             preter = Interpreter(code)
-            print(preter.ast)
+            print(preter.tree)
             code = ''
     else:
         f = open(file, 'r')
         code = f.read()
         preter = Interpreter(code)
-        print(preter.ast)
+        print(preter.run(preter.tree))
 
 
 

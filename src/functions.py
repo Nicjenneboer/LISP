@@ -12,4 +12,3 @@
 #         return l_str(str[1:], func, tmp_str)
 #     return tmp_str
 
-

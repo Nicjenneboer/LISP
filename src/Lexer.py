@@ -16,11 +16,9 @@ class Lexer():
 
     def __init__(self, code):
         self.code = code
-        self.elements = []
-        self.tokens = []
 
     def create_elements(self):
-        self.elements = list(filter(None, re.split('([(|)|+])|\s+', self.code)))
+        return list(filter(None, re.split('([(|)|+])|\s+', self.code)))
 
     def assigntoken(self, element):
         if element.lstrip('-').isdigit():
@@ -44,6 +42,4 @@ class Lexer():
         return token
 
     def tokenize(self):
-        self.create_elements()
-        self.tokens = map(self.assigntoken, self.elements)
-        return list(self.tokens)
+        return list(map(self.assigntoken, self.create_elements()))

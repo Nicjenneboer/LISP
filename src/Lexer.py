@@ -39,6 +39,10 @@ class Lexer():
             token = Token('O_BRACKET', element)
         elif element == ')':
             token = Token('C_BRACKET', element) 
+        elif element == '=':
+            token = Token('EQUAL', element)
+        elif element == 'if':
+            token = Token('IF', element)
         return token
 
     def tokenize(self):

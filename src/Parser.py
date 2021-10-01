@@ -13,13 +13,20 @@ class OpNode(Node):
         self.op = op
         self.lst = lst
 
+class KeyNode(Node):
+    def __init__(self, op, lst):
+        self.op = op
+        self.lst = lst
+
 class Parser():
     def __init__(self, tokens):
         self.tokens = tokens
 
     def create_node(self, lst):
-        if lst[0].type in ['PLUS', 'MIN', 'MUL', 'DIV']:
+        if lst[0].type in ['PLUS', 'MIN', 'MUL', 'DIV', 'EQUAL']:
             return OpNode(lst[0], lst[1:])
+        elif lst[0].type in ['IF']:
+            return KeyNode(lst[0], lst[1:])
         else:
             print("ERRORRR")
 

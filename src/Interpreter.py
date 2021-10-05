@@ -1,3 +1,4 @@
+from os import lstat
 from src.Parser import *
 from src.Lexer import *
 from src.functions import *
@@ -8,8 +9,17 @@ class Interpreter():
     def __init__(self, code):
         self.code = code
         self.lexer = Lexer(code)
-        self.parser = Parser(self.lexer.tokenize())
+        self.tokens = self.lexer.tokenize()
+        self.parser = Parser(self.tokens)
         self.tree = self.parser.create_nodes()
+        
+
+    def __str__(self):
+        line = 'Lexer: \n'
+        line += str(self.tokens) + '\n\n'
+        line += 'Parser: \n'
+        line += str(self.tree)
+        return line
 
     eval = {
         'PLUS'  : lambda x,y: x + y,
@@ -20,20 +30,23 @@ class Interpreter():
         'IF'    : lambda x,y,z: y if x == 'T' else z
     }
 
-    def exec(self, lst, func):
-        if isinstance(lst[-1], Node):
-            return func(self.run(lst[-1]), self.exec(lst[:-1], func))
+    def binOp(self, lst, func):
+        tmp = self.run(lst[-1]) 
         if len(lst)==1:
-            return lst[0].value
+            return tmp.value if hasattr(tmp, 'value') else tmp
         else:
-            return func(lst[-1].value, self.exec(lst[:-1], func))
+            return func(tmp.value if hasattr(tmp, 'value') else tmp, self.binOp(lst[:-1], func))
 
-    def execop(self, lst, func):
-        return func(self.run(lst[0]), self.run(lst[1]), self.run(lst[2]))
+    def specOp(self, lst, func):
+        return func(*list(map(self.run, lst))).value
+
 
     def run(self, node):
-        if isinstance(node, OpNode):
-            return self.exec(node.lst, self.eval[node.op.type])
-        elif isinstance(node, KeyNode):
-            return self.execop(node.lst, self.eval[node.op.type])
+        if isinstance(node, Node):
+
+                if node.eval == 'BINOP':
+                    return self.binOp(node.lst, self.eval[node.op.type])
+                elif node.eval == 'SPECOP':
+                    return self.specOp(node.lst, self.eval[node.op.type])
+      
         return node

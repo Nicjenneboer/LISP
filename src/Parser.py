@@ -1,34 +1,37 @@
 
 class Node():
-    pass
+    def __init__(self, lst, eval):
+        self.lst = lst
+        self.eval = eval
 
     def __str__(self):
-        return('opnode ' + self.op.type)
+        line = 'opnode ' + self.op.type
+        line += str(self.lst)
+        return line
 
     def __repr__(self):
         return self.__str__()
 
 class OpNode(Node):
     def __init__(self, op, lst):
+        Node.__init__(self, lst, op.eval)
         self.op = op
-        self.lst = lst
 
-class KeyNode(Node):
-    def __init__(self, op, lst):
-        self.op = op
-        self.lst = lst
+
 
 class Parser():
     def __init__(self, tokens):
         self.tokens = tokens
 
     def create_node(self, lst):
-        if lst[0].type in ['PLUS', 'MIN', 'MUL', 'DIV', 'EQUAL']:
+        eval = lst[0].eval
+        if eval == 'BINOP':
             return OpNode(lst[0], lst[1:])
-        elif lst[0].type in ['IF']:
-            return KeyNode(lst[0], lst[1:])
+        elif eval == 'SPECOP':
+            return OpNode(lst[0], lst[1:])
         else:
             print("ERRORRR")
+            exit()
 
 
     def create_nodes(self, index=0, lst=[] ):

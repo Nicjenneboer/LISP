@@ -2,12 +2,14 @@ import re
 from parser import *
 
 class Token():
-    def __init__(self, type, value):
+    def __init__(self, type, eval, value):
         self.type = type
+        self.eval = eval
         self.value = value
 
+
     def __str__(self):
-        return str(self.value)
+        return self.type + ' ' + str(self.value)
 
     def __repr__(self):
         return self.__str__()
@@ -22,27 +24,27 @@ class Lexer():
 
     def assigntoken(self, element):
         if element.lstrip('-').isdigit():
-            token = Token('INT', int(element))
+            token = Token('INT', 'NUMBER', int(element))
         elif re.match(r'^-?\d+(?:\.\d+)$', element):
-            token = Token('FLOAT', float(element))
+            token = Token('FLOAT', 'NUMBER', float(element))
         elif element[0] == '"' and element[-1] == '"':
-            token = Token('STRING', element[1:-1])
+            token = Token('STRING', 'TEXT', element[1:-1])
         elif element == '+':
-            token = Token('PLUS', element)
+            token = Token('PLUS', 'BINOP', element)
         elif element == '-':
-            token = Token('MIN', element)
+            token = Token('MIN', 'BINOP', element)
         elif element == '*':
-            token = Token('MUL', element)
+            token = Token('MUL', 'BINOP', element)
         elif element == '/':
-            token = Token('DIV', element)
+            token = Token('DIV', 'BINOP', element)
         elif element == '(':
-            token = Token('O_BRACKET', element)
+            token = Token('O_BRACKET', 'BRACKET', element)
         elif element == ')':
-            token = Token('C_BRACKET', element) 
+            token = Token('C_BRACKET', 'BRACKET', element) 
         elif element == '=':
-            token = Token('EQUAL', element)
+            token = Token('EQUAL', 'BINOP', element)
         elif element == 'if':
-            token = Token('IF', element)
+            token = Token('IF', 'SPECOP', element)
         return token
 
     def tokenize(self):

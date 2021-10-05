@@ -42,7 +42,15 @@ class Lexer():
         elif element == ')':
             token = Token('C_BRACKET', 'BRACKET', element) 
         elif element == '=':
-            token = Token('EQUAL', 'BINOP', element)
+            token = Token('EQUAL', 'BOOL', element)
+        elif element == '>':
+            token = Token('GREATER', 'BOOL', element)
+        elif element == '<':
+            token = Token('LESS', 'BOOL', element)
+        elif element == '>=':
+            token = Token('GREATEROREQUAL', 'BOOL', element)
+        elif element == '<=':
+            token = Token('LESSOREQUAL', 'BOOL', element)
         elif element == 'if':
             token = Token('IF', 'SPECOP', element)
         return token

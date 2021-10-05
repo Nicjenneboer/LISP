@@ -12,6 +12,7 @@ class Node():
     def __repr__(self):
         return self.__str__()
 
+
 class OpNode(Node):
     def __init__(self, op, lst):
         Node.__init__(self, lst, op.eval)
@@ -26,6 +27,8 @@ class Parser():
     def create_node(self, lst):
         eval = lst[0].eval
         if eval == 'BINOP':
+            return OpNode(lst[0], lst[1:])
+        elif eval == 'BOOL':
             return OpNode(lst[0], lst[1:])
         elif eval == 'SPECOP':
             return OpNode(lst[0], lst[1:])

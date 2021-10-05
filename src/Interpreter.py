@@ -26,16 +26,22 @@ class Interpreter():
         'MIN'   : lambda x,y: y - x,
         'MUL'   : lambda x,y: x * y,
         'DIV'   : lambda x,y: y / x,
-        'EQUAL' : lambda x,y: 'T' if y == x else 'NIL', # NEED FIX FOR MORE VALUES
+
+        'EQUAL' : lambda x,y: 'NIL' if y == 'NIL' else x if y == x else 'NIL',
+        'GREATER' : lambda x,y: 'NIL' if y == 'NIL' else x if y > x else 'NIL',
+        'LESS' : lambda x,y: 'NIL' if y == 'NIL' else x if y < x else 'NIL',
+        'GREATEROREQUAL' : lambda x,y: 'NIL' if y == 'NIL' else x if y >= x else 'NIL',
+        'LESSOREQUAL' : lambda x,y: 'NIL' if y == 'NIL' else x if y <= x else 'NIL',
+
         'IF'    : lambda x,y,z: y if x == 'T' else z
     }
 
     def binOp(self, lst, func):
-        tmp = self.run(lst[-1]) 
+        tmp = self.run(lst[-1])
+        if hasattr(tmp, 'value') : tmp = tmp.value
         if len(lst)==1:
-            return tmp.value if hasattr(tmp, 'value') else tmp
-        else:
-            return func(tmp.value if hasattr(tmp, 'value') else tmp, self.binOp(lst[:-1], func))
+            return tmp
+        return func(tmp, self.binOp(lst[:-1], func))
 
     def specOp(self, lst, func):
         return func(*list(map(self.run, lst))).value
@@ -46,6 +52,8 @@ class Interpreter():
 
                 if node.eval == 'BINOP':
                     return self.binOp(node.lst, self.eval[node.op.type])
+                elif node.eval == 'BOOL':
+                    return 'NIL' if self.binOp(node.lst, self.eval[node.op.type]) == 'NIL' else 'T'
                 elif node.eval == 'SPECOP':
                     return self.specOp(node.lst, self.eval[node.op.type])
       

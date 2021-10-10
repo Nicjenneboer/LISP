@@ -80,16 +80,16 @@ class Lexer():
         elif element == '<=':
             type, eval = 'LESSOREQUAL', 'BOOL'
         elif element == 'if':
-            type, eval = 'IF', 'SPECOP'
+            type, eval = 'IF', 'CONDITION'
         elif element == 'write':
-            type, eval = 'PRINT', 'SPECOP'
+            type, eval = 'PRINT', 'PRINT'
         elif element == 'setf':
             type, eval = 'SET', 'SETVAR'
             
         elif element == 'defun':
             type, eval = 'SET', 'SETFUNC'
         elif element.isalnum():
-            type, eval = 'VAR', 'GET'
+            type, eval = 'VAR', 'CALL'
 
         else:
             self.error.newError('Error', pos)

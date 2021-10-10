@@ -5,7 +5,8 @@ from src.functions import *
 from src.Error import *
 
 class VarTable():
-    def __init__(self):
+    def __init__(self, error):
+        self.error = error
         self.table = {}
 
     def __str__(self):
@@ -17,9 +18,15 @@ class VarTable():
     def setVar(self, id, val):
         self.table[id] = val
 
-    def getVar(self, id):
-        return self.table[id]
-  
+    def setFunc(self, node):
+        self.table[node.id.value] = {'nodes': node.val, 'args': node.args}
+
+    def getVar(self, token):
+        try:
+            return self.table[token.value]
+        except:
+            self.error.newError('Var not excist: ', token.pos)
+            print(self.error)
 
 class Interpreter():
     def __init__(self, code):
@@ -29,7 +36,7 @@ class Interpreter():
         self.tokens = self.lexer.tokenize()
         self.parser = Parser(self.tokens, self.error)
         self.tree = self.parser.create_nodes()
-        self.table = VarTable()
+        self.table = VarTable(self.error)
         
 
     def __str__(self):
@@ -56,6 +63,9 @@ class Interpreter():
         #SPECIAL OPERATIONS
         'IF'    : lambda x,y,z=None: y if x == 'T' else z if z != None else 'NIL',
         'PRINT' : lambda x: print(x),
+
+        #Set
+        'SET': lambda x: print(x)
     }
 
     def binOp(self, lst, func):
@@ -65,10 +75,11 @@ class Interpreter():
             return tmp
         return func(tmp, self.binOp(lst[:-1], func))
 
-    def specOp(self, lst, func):
+    def print(self, lst, func):
         tmp = func(*list(map(self.run, lst)))
         if hasattr(tmp, 'value') : tmp = tmp.value
         return tmp
+
 
 
     def run(self, node):
@@ -78,14 +89,26 @@ class Interpreter():
                 return self.binOp(node.lst, self.eval[node.op.type])
             elif node.eval == 'BOOL':
                 return 'NIL' if self.binOp(node.lst, self.eval[node.op.type]) == 'NIL' else 'T'
-            elif node.eval == 'SPECOP':
-                  return self.specOp(node.lst, self.eval[node.op.type])
+            elif node.eval == 'PRINT':
+                return self.print(node.lst, self.eval[node.op.type])
+            elif node.eval == 'CONDITION':
+                return self.run(self.eval[node.op.type](self.run(node.cond), node.lst[0], node.lst[1]))
             elif node.eval == 'SETVAR':
                 return self.table.setVar(node.id.value, self.run(node.val))
             elif node.eval == 'SETFUNC':
-                return self.table.setVar(node.id.value, node)
-            elif node.eval == 'GET':
-                return list(map(self.run, self.table.getVar(node.id.value).val))
+                self.table.setFunc(node)
+            elif node.eval == 'CALLFUNC':
+                args = self.table.getVar(node.id)['args']
+                if node.args and args:
+                    if len(node.args) == len(args):
+                        print('poep')
+                return list(map(self.run, self.table.getVar(node.id)['nodes']))
+            elif node.eval == 'EMPTY':
+                print("EMPTY NODE")
+
+        if isinstance(node, Token):
+            if node.type == 'VAR':
+                return self.table.getVar(node)
 
 
         return node

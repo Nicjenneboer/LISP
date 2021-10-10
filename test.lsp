@@ -1,2 +1,6 @@
-( setf x (+ 7 8))
-(write x)
+(setf x 5)
+(defun p (sjaak)  (setf x (- x 1)) (write x) (r)  )
+(defun r ()   ( if (= 1 x)  (write x) (p) )  ) 
+(r)
+(defun sjaak(q) (write "hoi"))
+(sjaak 5 4)

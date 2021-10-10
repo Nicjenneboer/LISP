@@ -15,6 +15,13 @@ class OpNode(Node):
         Node.__init__(self, op.eval)
         self.lst = lst
         self.op = op
+
+class conNode(Node):
+    def __init__(self, op, cond, lst):
+        Node.__init__(self, op.eval)
+        self.op = op
+        self.cond = cond
+        self.lst = lst
     
 class SetVarNode(Node):
     def __init__(self, op, id, val):
@@ -24,7 +31,7 @@ class SetVarNode(Node):
         self.val = val
 
 class SetFuncNode(Node):
-    def __init__(self, op, id, args, *val):
+    def __init__(self, op, id, args, val):
         Node.__init__(self, op.eval)
         self.op = op
         self.id = id
@@ -38,10 +45,12 @@ class SetFuncNode(Node):
         return self.__str__()
 
 class FuncNode(Node):
-    def __init__(self, id, args):
+
+    def __init__(self, id, args=None):
         Node.__init__(self, id.eval)
         self.id = id
         self.args = args
+
 
     def __str__(self):
         return str(self.id.value) + ' ' + str(self.id.value)
@@ -63,14 +72,18 @@ class Parser():
             return OpNode(lst[0], lst[1:])
         elif eval == 'BOOL':
             return OpNode(lst[0], lst[1:])
-        elif eval == 'SPECOP':
+        elif eval == 'PRINT':
             return OpNode(lst[0], lst[1:])
+        elif eval == 'CONDITION':
+            return conNode(lst[0], lst[1], lst[2:])
         elif eval == 'SETVAR':
             return SetVarNode(lst[0], lst[1], lst[2])
         elif eval == 'SETFUNC':
-            return SetFuncNode(lst[0], lst[1], lst[2], *lst[3:])
-        elif eval == 'GET':
-            return FuncNode(lst[0], lst[1:])
+            return SetFuncNode(lst[0], lst[1], lst[2], lst[3:])
+        elif eval == 'CALL':
+            lst[0].eval = "CALLFUNC"
+            if len(lst) > 0: return FuncNode(lst[0], lst[1:])
+            return FuncNode(lst[0])
         elif eval == 'NUMBER':
             return lst
         else:

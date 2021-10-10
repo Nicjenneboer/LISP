@@ -7,7 +7,7 @@ class error():
         self.errors += [[string, pos]]
 
     def print(self, error):
-        return error[0] + ': line ' + str(error[1].row) + '\n' + self.code.split('\n')[error[1].row] + '\n' + (' ' * error[1].index ) + '^'
+        return error[0] + ': line ' + str(error[1].row) + '\n' + self.code.split('\n')[error[1].row] + '\n' + (' ' * (error[1].index-1) ) + '^'
 
     def __str__(self):
         return '\n'.join(list(map(self.print, self.errors)))

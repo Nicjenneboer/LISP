@@ -7,13 +7,14 @@ def main(commandline=True, file=None):
         while True:
             code = input('lisp: ')
             preter = Interpreter(code)
-            print(preter.run(preter.tree))
+            preter.run(preter.tree)
     else:
         f = open(file, 'r')
         code = f.read()
         preter = Interpreter(code)
-        print(preter)
-        print(preter.run(preter.tree))
+        #print(preter)
+        list(map(preter.run, preter.tree))
+        #print(preter.run(preter.tree))
 
 
 

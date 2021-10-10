@@ -1,11 +1,13 @@
+import enum
 import re
 from parser import *
 
 class Token():
-    def __init__(self, type, eval, value):
+    def __init__(self, type, eval, value, pos):
         self.type = type
         self.eval = eval
         self.value = value
+        self.pos = pos
 
 
     def __str__(self):
@@ -14,46 +16,90 @@ class Token():
     def __repr__(self):
         return self.__str__()
 
+
+class Pos():
+    def __init__(self, row=0, index=0):
+        self.row = row
+        self.index = index
+
+    def __str__(self):
+        return str((self.row, self.index))
+
+    def __repr__(self):
+        return self.__str__()
+
 class Lexer():
 
-    def __init__(self, code):
+    def __init__(self, code, error):
         self.code = code
+        self.error = error
 
-    def create_elements(self):
-        return list(filter(None, re.split('([(|)|+])|\s+', self.code)))
+    def group(self, lst, deli, pos=Pos(), tmp=[], group='' ):
+        if len(lst) < 1:
+            return tmp
+        if lst[0] in ' \n' + deli:
+            if group: tmp+=[[group, pos]]; group=''
+            if lst[0] == '\n': pos=Pos(pos.row+1, -1)
+            elif lst[0] != ' ': tmp+=[[lst[0], pos]]
+        else:
+            group+=lst[0]
+        return self.group(lst[1:], deli, Pos(pos.row, pos.index+1), tmp, group)
 
     def assigntoken(self, element):
+        pos = element[1]
+        element = element[0]
         if element.lstrip('-').isdigit():
-            token = Token('INT', 'NUMBER', int(element))
+            type, eval = 'INT', 'NUMBER'
+            element = int(element)
         elif re.match(r'^-?\d+(?:\.\d+)$', element):
-            token = Token('FLOAT', 'NUMBER', float(element))
+            type, eval = 'FLOAT', 'NUMBER'
+            element = float(element)
         elif element[0] == '"' and element[-1] == '"':
-            token = Token('STRING', 'TEXT', element[1:-1])
+            type, eval = 'STRING', 'TEXT'
+            element = element[1:-1]
         elif element == '+':
-            token = Token('PLUS', 'BINOP', element)
+            type, eval = 'PLUS', 'BINOP'
         elif element == '-':
-            token = Token('MIN', 'BINOP', element)
+            type, eval = 'MIN', 'BINOP'
         elif element == '*':
-            token = Token('MUL', 'BINOP', element)
+            type, eval = 'MUL', 'BINOP'
         elif element == '/':
-            token = Token('DIV', 'BINOP', element)
+            type, eval = 'DIV', 'BINOP'
         elif element == '(':
-            token = Token('O_BRACKET', 'BRACKET', element)
+            type, eval = 'O_BRACKET', 'BRACKET'
         elif element == ')':
-            token = Token('C_BRACKET', 'BRACKET', element) 
+            type, eval = 'C_BRACKET', 'BRACKET'
         elif element == '=':
-            token = Token('EQUAL', 'BOOL', element)
+            type, eval = 'EQUAL', 'BOOL'
         elif element == '>':
-            token = Token('GREATER', 'BOOL', element)
+            type, eval = 'GREATER', 'BOOL'
         elif element == '<':
-            token = Token('LESS', 'BOOL', element)
+            type, eval = 'LESS', 'BOOL'
         elif element == '>=':
-            token = Token('GREATEROREQUAL', 'BOOL', element)
+            type, eval = 'GREATEROREQUAL', 'BOOL'
         elif element == '<=':
-            token = Token('LESSOREQUAL', 'BOOL', element)
+            type, eval = 'LESSOREQUAL', 'BOOL'
         elif element == 'if':
-            token = Token('IF', 'SPECOP', element)
-        return token
+            type, eval = 'IF', 'SPECOP'
+        elif element == 'write':
+            type, eval = 'PRINT', 'SPECOP'
+        elif element == 'setf':
+            type, eval = 'SET', 'SETVAR'
+            
+        elif element == 'defun':
+            type, eval = 'SET', 'SETFUNC'
+        elif element.isalnum():
+            type, eval = 'VAR', 'GET'
+
+        else:
+            self.error.newError('Error', pos)
+            return
+        
+        return Token(type, eval, element, pos)
 
     def tokenize(self):
-        return list(map(self.assigntoken, self.create_elements()))
+        try:
+            return list(map(self.assigntoken, self.group(self.code, '()')))
+        except:
+            print(self.error)
+            return []

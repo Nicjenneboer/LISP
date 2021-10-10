@@ -1,13 +1,36 @@
 from os import lstat
 from src.Parser import *
 from src.Lexer import *
-from src.functions import *
 from src.Error import *
 
-class VarTable():
+class Table():
     def __init__(self, error):
         self.error = error
-        self.table = {}
+        self.table = { 'var' : {}, 'func' : {}}
+
+    def setVar(self, id, val, func=None):
+        if func:
+            self.table['func'][func]['args'][id] = val
+        else:
+            self.table['var'][id] = val
+
+    def getVar(self, token):
+        return self.table['var'][token.value]
+
+    def getFuncVar(self, func):
+            return self.table['func'][func]
+
+    def setFunc(self, node):
+        self.table['func'][node.id.value] = {'val' : node.val, 'args': {}}
+        if node.args:
+            args = list(enumerate(node.args))
+            any(map(lambda x: self.setVar(x[0], x[1].id, node.id.value), args))
+
+    def __add__(self, table):
+        self.table['var'].update(table.table['var'])
+        self.table['func'].update(table.table['func'])
+        return self
+        
 
     def __str__(self):
         return str(self.table)
@@ -15,18 +38,6 @@ class VarTable():
     def __repr__(self):
         return self.__str__()
 
-    def setVar(self, id, val):
-        self.table[id] = val
-
-    def setFunc(self, node):
-        self.table[node.id.value] = {'nodes': node.val, 'args': node.args}
-
-    def getVar(self, token):
-        try:
-            return self.table[token.value]
-        except:
-            self.error.newError('Var not excist: ', token.pos)
-            print(self.error)
 
 class Interpreter():
     def __init__(self, code):
@@ -36,7 +47,7 @@ class Interpreter():
         self.tokens = self.lexer.tokenize()
         self.parser = Parser(self.tokens, self.error)
         self.tree = self.parser.create_nodes()
-        self.table = VarTable(self.error)
+        self.table = Table(self.error)
         
 
     def __str__(self):
@@ -64,8 +75,6 @@ class Interpreter():
         'IF'    : lambda x,y,z=None: y if x == 'T' else z if z != None else 'NIL',
         'PRINT' : lambda x: print(x),
 
-        #Set
-        'SET': lambda x: print(x)
     }
 
     def binOp(self, lst, func):
@@ -86,7 +95,8 @@ class Interpreter():
         if isinstance(node, Node):
 
             if node.eval == 'BINOP':
-                return self.binOp(node.lst, self.eval[node.op.type])
+                tmp = self.binOp(node.lst, self.eval[node.op.type])
+                return tmp
             elif node.eval == 'BOOL':
                 return 'NIL' if self.binOp(node.lst, self.eval[node.op.type]) == 'NIL' else 'T'
             elif node.eval == 'PRINT':
@@ -98,11 +108,21 @@ class Interpreter():
             elif node.eval == 'SETFUNC':
                 self.table.setFunc(node)
             elif node.eval == 'CALLFUNC':
-                args = self.table.getVar(node.id)['args']
-                if node.args and args:
-                    if len(node.args) == len(args):
-                        print('poep')
-                return list(map(self.run, self.table.getVar(node.id)['nodes']))
+                func = self.table.getFuncVar(node.id.value)
+                prog = func['val']
+                if node.args:
+                    args = func['args']
+                    backup = self.table
+                    newtable = Table(self.error)
+                    any(map(lambda x: newtable.setVar(args[x[0]], self.run(x[1])), list(enumerate(node.args))))
+                    self.table += newtable
+                    list(map(self.run, prog))
+                    self.table = backup
+                    return
+                
+
+                    
+                    
             elif node.eval == 'EMPTY':
                 print("EMPTY NODE")
 

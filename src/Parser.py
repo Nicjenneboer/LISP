@@ -30,6 +30,18 @@ class SetVarNode(Node):
         self.id = id
         self.val = val
 
+class varNode(Node):
+    def __init__(self, token):
+        Node.__init__(self, token.eval)
+        self.op = token.eval
+        self.id = token.value
+
+    def __str__(self):
+        return 'VAR ' + self.id 
+
+    def __repr__(self):
+        return self.__str__()
+
 class SetFuncNode(Node):
     def __init__(self, op, id, args, val):
         Node.__init__(self, op.eval)
@@ -47,13 +59,13 @@ class SetFuncNode(Node):
 class FuncNode(Node):
 
     def __init__(self, id, args=None):
-        Node.__init__(self, id.eval)
+        Node.__init__(self, 'CALLFUNC')
         self.id = id
         self.args = args
 
 
     def __str__(self):
-        return str(self.id.value) + ' ' + str(self.id.value)
+        return 'FUNC ' + str(self.id.value) + ' ' + str(self.args)
 
     def __repr__(self):
         return self.__str__()
@@ -66,7 +78,7 @@ class Parser():
 
     def create_node(self, lst):
         if lst == []:
-            return Node('EMPTY')
+            return []
         eval = lst[0].eval
         if eval == 'BINOP':
             return OpNode(lst[0], lst[1:])
@@ -80,14 +92,17 @@ class Parser():
             return SetVarNode(lst[0], lst[1], lst[2])
         elif eval == 'SETFUNC':
             return SetFuncNode(lst[0], lst[1], lst[2], lst[3:])
-        elif eval == 'CALL':
-            lst[0].eval = "CALLFUNC"
-            if len(lst) > 0: return FuncNode(lst[0], lst[1:])
-            return FuncNode(lst[0])
+        elif eval == 'VAR':
+            if any(map(lambda x: False if x.eval == 'VAR' else True, lst)):
+                return FuncNode(lst[0], lst[1:])
+            else:
+                return list(map(varNode, lst))
+
+
         elif eval == 'NUMBER':
             return lst
         else:
-            print("ERRORRR2")
+            print("ERROR")
             exit()
 
 

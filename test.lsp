@@ -1,6 +1,6 @@
-(setf x 5)
-(defun p (sjaak)  (setf x (- x 1)) (write x) (r)  )
-(defun r ()   ( if (= 1 x)  (write x) (p) )  ) 
-(r)
-(defun sjaak(q) (write "hoi"))
-(sjaak 5 4)
+(defun even (n) ( if (= n 0) (write "EVEN") (odd ( - n 1 ))  ))
+(defun odd (n) ( if (= n 0) (write "ODD") (even ( - n 1 ))  ))
+
+(even 111)
+(even 112)
+

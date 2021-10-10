@@ -89,7 +89,7 @@ class Lexer():
         elif element == 'defun':
             type, eval = 'SET', 'SETFUNC'
         elif element.isalnum():
-            type, eval = 'VAR', 'CALL'
+            type, eval = 'VAR', 'VAR'
 
         else:
             self.error.newError('Error', pos)

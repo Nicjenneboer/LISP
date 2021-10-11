@@ -3,7 +3,7 @@ from src.Parser import *
 from src.Interpreter import *
 
 def main():
-    f = open('test.lsp', 'r')
+    f = open('examples.lsp', 'r')
     code = f.read()
     tokens = tokenize(code)
     tree = create_nodes(tokens)

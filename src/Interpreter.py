@@ -52,7 +52,6 @@ def run(node, stack=Stack()):
             return run(eval[node.op.type](run(node.cond, stack), node.lst[0], node.lst[1]), stack)
 
         elif node.eval == 'SETVAR':
-            print(node)
             return stack.varadd(node.id.value, run(node.val, stack))
 
 
@@ -80,7 +79,7 @@ def run(node, stack=Stack()):
             tmp = init(func[1], stack)
             if args:
                 stack.removevar(len(args))
-            return tmp
+            return tmp[0]
                     
      
         elif node.eval == 'EMPTY':

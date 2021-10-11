@@ -1,5 +1,9 @@
-(defun even (n) ( if (= n 0) (write "EVEN") (odd ( - n 1 ))  ))
-(defun odd (n) ( if (= n 0) (write "ODD") (even ( - n 1 ))  ))
+(defun even (n) ( if (= n 0) "EVEN" (odd ( - n 1 ))  ))
+(defun odd (n) ( if (= n 0) "ODD" (even ( - n 1 ))  ))
 
-(even 111)
-(even 112)
+(write(even 111))
+(write(even 112))
+
+
+(defun factorial (n) (if (= n 0) 1 (* n (factorial (- n 1))))  )
+(write(factorial 6))

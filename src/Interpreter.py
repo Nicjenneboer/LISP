@@ -24,7 +24,7 @@ eval = {
 }
 
 # Recursive binary operations for a list
-def binOp(lst, func, stack):
+def binOp(lst: List[Token], func: eval, stack: Stack) -> int:
     tmp = run(lst[-1], stack)
     if hasattr(tmp, 'value') : tmp = tmp.value
     if len(lst)==1:
@@ -32,13 +32,13 @@ def binOp(lst, func, stack):
     return func(tmp, binOp(lst[:-1], func, stack))
 
 # Execute a list of nodes
-def init(nodes, stack):
+def init(nodes: List[Node], stack: Stack):
     if len(nodes) == 1:
         return [run(nodes[0], stack)]
     return [run(nodes[0], stack)] + init(nodes[1:], stack)
 
 # Execute node and all child nodes
-def run(node, stack=Stack()):
+def run(node: Node, stack=Stack()):
     if isinstance(node, Node):
         
         # First node
@@ -93,9 +93,8 @@ def run(node, stack=Stack()):
         elif node.eval == 'EMPTY':
             print("EMPTY NODE")
 
-    if isinstance(node, Token):
+    elif isinstance(node, Token):
         if node.type == 'VAR':
             return stack.varget(node.value)
-
 
     return node

@@ -2,7 +2,7 @@ import re
 from src.Classes import *
 
 #Split code in elements and add element position
-def group(lst, deli, pos=Pos(), tmp=[], str='' ):
+def group(lst: str, deli: str, pos: Pos = Pos(), tmp: List = [], str: str = '' ) -> List:
     if len(lst) < 1:
         return tmp
     if lst[0] in ' \n' + deli:
@@ -14,7 +14,7 @@ def group(lst, deli, pos=Pos(), tmp=[], str='' ):
     return group(lst[1:], deli, Pos(pos.row, pos.index+1), tmp, str)
 
 #Make a token from an element
-def assigntoken(element):
+def assigntoken(element) -> Token:
     pos = element[1]
     element = element[0]
 
@@ -79,5 +79,5 @@ def assigntoken(element):
     return Token(type, eval, element, pos)
 
 #List Elements to List Tokens
-def tokenize(code):
+def tokenize(code: str) -> List[Token]:
     return list(map(assigntoken, group(code, '()')))

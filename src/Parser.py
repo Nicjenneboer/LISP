@@ -1,7 +1,7 @@
 from src.Classes import *
 
 #Return a node from an list of Tokens
-def create_node(lst):
+def create_node(lst: List[Token]) -> Node:
     if lst == []:
         return []
     eval = lst[0].eval
@@ -29,8 +29,8 @@ def create_node(lst):
         exit()
 
 
-# Create a node from a list of tokens inside every depth brackets 
-def create_nodes(tokens, depth=0, lst=[] ):
+# Create a node and child nodes from a list of tokens inside every matching brackets
+def create_nodes(tokens: List[Token], depth: int=0, lst: List=[] ) -> initNode:
     if tokens[0].type == 'O_BRACKET':
         node, tokens, depth = create_nodes(tokens[1:], depth+1, lst=[])
         lst += [node]

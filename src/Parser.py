@@ -1,123 +1,47 @@
+from src.Classes import *
 
-class Node():
-    def __init__(self, eval):
-        self.eval = eval
-
-    def __str__(self):
-        return self.eval
-
-    def __repr__(self):
-        return self.__str__()
-
-
-class OpNode(Node):
-    def __init__(self, op, lst):
-        Node.__init__(self, op.eval)
-        self.lst = lst
-        self.op = op
-
-class conNode(Node):
-    def __init__(self, op, cond, lst):
-        Node.__init__(self, op.eval)
-        self.op = op
-        self.cond = cond
-        self.lst = lst
-    
-class SetVarNode(Node):
-    def __init__(self, op, id, val):
-        Node.__init__(self, op.eval)
-        self.op = op
-        self.id = id
-        self.val = val
-
-class varNode(Node):
-    def __init__(self, token):
-        Node.__init__(self, token.eval)
-        self.op = token.eval
-        self.id = token.value
-
-    def __str__(self):
-        return 'VAR ' + self.id 
-
-    def __repr__(self):
-        return self.__str__()
-
-class SetFuncNode(Node):
-    def __init__(self, op, id, args, val):
-        Node.__init__(self, op.eval)
-        self.op = op
-        self.id = id
-        self.args = args
-        self.val = val
-
-    def __str__(self):
-        return str(self.id.value) + ' ' + str(self.args) + ' ' + str(self.val)
-
-    def __repr__(self):
-        return self.__str__()
-
-class FuncNode(Node):
-
-    def __init__(self, id, args=None):
-        Node.__init__(self, 'CALLFUNC')
-        self.id = id
-        self.args = args
+#Return a node from an list of Tokens
+def create_node(lst):
+    if lst == []:
+        return []
+    eval = lst[0].eval
+    if eval == 'BINOP':
+        return OpNode(lst[0], lst[1:])
+    elif eval == 'BOOL':
+        return OpNode(lst[0], lst[1:])
+    elif eval == 'PRINT':
+        return OpNode(lst[0], lst[1:])
+    elif eval == 'CONDITION':
+        return conNode(lst[0], lst[1], lst[2:])
+    elif eval == 'SETVAR':
+        return SetVarNode(lst[0], lst[1], lst[2])
+    elif eval == 'SETFUNC':
+        return SetFuncNode(lst[0], lst[1], lst[2], lst[3:])
+    elif eval == 'VAR':
+        return varNode(lst)
 
 
-    def __str__(self):
-        return 'FUNC ' + str(self.id.value) + ' ' + str(self.args)
-
-    def __repr__(self):
-        return self.__str__()
-
-
-class Parser():
-    def __init__(self, tokens, error):
-        self.tokens = tokens
-        self.error = error
-
-    def create_node(self, lst):
-        if lst == []:
-            return []
-        eval = lst[0].eval
-        if eval == 'BINOP':
-            return OpNode(lst[0], lst[1:])
-        elif eval == 'BOOL':
-            return OpNode(lst[0], lst[1:])
-        elif eval == 'PRINT':
-            return OpNode(lst[0], lst[1:])
-        elif eval == 'CONDITION':
-            return conNode(lst[0], lst[1], lst[2:])
-        elif eval == 'SETVAR':
-            return SetVarNode(lst[0], lst[1], lst[2])
-        elif eval == 'SETFUNC':
-            return SetFuncNode(lst[0], lst[1], lst[2], lst[3:])
-        elif eval == 'VAR':
-            if any(map(lambda x: False if x.eval == 'VAR' else True, lst)):
-                return FuncNode(lst[0], lst[1:])
-            else:
-                return list(map(varNode, lst))
-
-
-        elif eval == 'NUMBER':
-            return lst
-        else:
-            print("ERROR")
-            exit()
-
-
-    def create_nodes(self, index=0, depth=0, lst=[] ):
-        if self.tokens[index].type == 'O_BRACKET':
-            node, index, depth = self.create_nodes(index+1, depth+1, lst=[])
-            lst += [node]
-        elif self.tokens[index].type == 'C_BRACKET':
-            if depth <= 0:
-                self.error.newError('Bracket Error', self.tokens[index].pos)
-            return self.create_node(lst), index, depth-1
-        else:
-            return self.create_nodes(index+1, depth, lst+[self.tokens[index]])
-        if len(self.tokens) > index+1:
-            return self.create_nodes(index+1, depth, lst)
-        if depth != 0:
-            self.error.newError('Bracket Error', self.tokens[index].pos)
+    elif eval == 'NUMBER':
         return lst
+    else:
+        print(eval)
+        print("ERROR")
+        exit()
+
+
+# Create a node from a list of tokens inside every depth brackets 
+def create_nodes(tokens, depth=0, lst=[] ):
+    if tokens[0].type == 'O_BRACKET':
+        node, tokens, depth = create_nodes(tokens[1:], depth+1, lst=[])
+        lst += [node]
+    elif tokens[0].type == 'C_BRACKET':
+        #if depth <= 0:
+            #error.newError('Bracket Error', tokens[index].pos)
+        return create_node(lst), tokens, depth-1
+    else:
+        return create_nodes(tokens[1:], depth, lst+[tokens[0]])
+    if len(tokens) > 1:
+        return create_nodes(tokens[1:], depth, lst)
+    #if depth != 0:
+        #self.error.newError('Bracket Error', tokens[index].pos)
+    return initNode(lst)

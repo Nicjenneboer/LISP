@@ -1,134 +1,94 @@
-from os import lstat
-from src.Parser import *
-from src.Lexer import *
-from src.Error import *
-
-class Table():
-    def __init__(self, error):
-        self.error = error
-        self.table = { 'var' : {}, 'func' : {}}
-
-    def setVar(self, id, val, func=None):
-        if func:
-            self.table['func'][func]['args'][id] = val
-        else:
-            self.table['var'][id] = val
-
-    def getVar(self, token):
-        return self.table['var'][token.value]
-
-    def getFuncVar(self, func):
-            return self.table['func'][func]
-
-    def setFunc(self, node):
-        self.table['func'][node.id.value] = {'val' : node.val, 'args': {}}
-        if node.args:
-            args = list(enumerate(node.args))
-            any(map(lambda x: self.setVar(x[0], x[1].id, node.id.value), args))
-
-    def __add__(self, table):
-        self.table['var'].update(table.table['var'])
-        self.table['func'].update(table.table['func'])
-        return self
-        
-
-    def __str__(self):
-        return str(self.table)
-    
-    def __repr__(self):
-        return self.__str__()
+from src.Classes import *
 
 
-class Interpreter():
-    def __init__(self, code):
-        self.code = code
-        self.error = error(code)
-        self.lexer = Lexer(code, self.error)
-        self.tokens = self.lexer.tokenize()
-        self.parser = Parser(self.tokens, self.error)
-        self.tree = self.parser.create_nodes()
-        self.table = Table(self.error)
-        
 
-    def __str__(self):
-        line = 'Lexer: \n'
-        line += str(self.tokens) + '\n\n'
-        line += 'Parser: \n'
-        line += str(self.tree)
-        return line
+eval = {
+    #BINARY OPERATIONS
+    'PLUS'  : lambda x,y: x + y,
+    'MIN'   : lambda x,y: y - x,
+    'MUL'   : lambda x,y: x * y,
+    'DIV'   : lambda x,y: y / x,
 
-    eval = {
-        #BINARY OPERATIONS
-        'PLUS'  : lambda x,y: x + y,
-        'MIN'   : lambda x,y: y - x,
-        'MUL'   : lambda x,y: x * y,
-        'DIV'   : lambda x,y: y / x,
+    #BOOL OPERATIONS
+    'EQUAL' : lambda x,y=None: 'NIL' if y == 'NIL' else x if y == x else 'NIL',
+    'GREATER' : lambda x,y: 'NIL' if y == 'NIL' else x if y > x else 'NIL',
+    'LESS' : lambda x,y: 'NIL' if y == 'NIL' else x if y < x else 'NIL',
+    'GREATEROREQUAL' : lambda x,y: 'NIL' if y == 'NIL' else x if y >= x else 'NIL',
+    'LESSOREQUAL' : lambda x,y: 'NIL' if y == 'NIL' else x if y <= x else 'NIL',
 
-        #BOOL OPERATIONS
-        'EQUAL' : lambda x,y=None: 'NIL' if y == 'NIL' else x if y == x else 'NIL',
-        'GREATER' : lambda x,y: 'NIL' if y == 'NIL' else x if y > x else 'NIL',
-        'LESS' : lambda x,y: 'NIL' if y == 'NIL' else x if y < x else 'NIL',
-        'GREATEROREQUAL' : lambda x,y: 'NIL' if y == 'NIL' else x if y >= x else 'NIL',
-        'LESSOREQUAL' : lambda x,y: 'NIL' if y == 'NIL' else x if y <= x else 'NIL',
+    #SPECIAL OPERATIONS
+    'IF'    : lambda x,y,z=None: y if x == 'T' else z if z != None else 'NIL',
+    'PRINT' : lambda x: print(x),
 
-        #SPECIAL OPERATIONS
-        'IF'    : lambda x,y,z=None: y if x == 'T' else z if z != None else 'NIL',
-        'PRINT' : lambda x: print(x),
 
-    }
+}
 
-    def binOp(self, lst, func):
-        tmp = self.run(lst[-1])
-        if hasattr(tmp, 'value') : tmp = tmp.value
-        if len(lst)==1:
-            return tmp
-        return func(tmp, self.binOp(lst[:-1], func))
-
-    def print(self, lst, func):
-        tmp = func(*list(map(self.run, lst)))
-        if hasattr(tmp, 'value') : tmp = tmp.value
+def binOp(lst, func, stack):
+    tmp = run(lst[-1], stack)
+    if hasattr(tmp, 'value') : tmp = tmp.value
+    if len(lst)==1:
         return tmp
+    return func(tmp, binOp(lst[:-1], func, stack))
+
+def init(nodes, stack):
+    if len(nodes) == 1:
+        return [run(nodes[0], stack)]
+    return [run(nodes[0], stack)] + init(nodes[1:], stack)
 
 
+def run(node, stack=Stack()):
+    if isinstance(node, Node):
 
-    def run(self, node):
-        if isinstance(node, Node):
+        if node.eval == 'INIT':
+            return init(node.lst, stack)
 
-            if node.eval == 'BINOP':
-                tmp = self.binOp(node.lst, self.eval[node.op.type])
-                return tmp
-            elif node.eval == 'BOOL':
-                return 'NIL' if self.binOp(node.lst, self.eval[node.op.type]) == 'NIL' else 'T'
-            elif node.eval == 'PRINT':
-                return self.print(node.lst, self.eval[node.op.type])
-            elif node.eval == 'CONDITION':
-                return self.run(self.eval[node.op.type](self.run(node.cond), node.lst[0], node.lst[1]))
-            elif node.eval == 'SETVAR':
-                return self.table.setVar(node.id.value, self.run(node.val))
-            elif node.eval == 'SETFUNC':
-                self.table.setFunc(node)
-            elif node.eval == 'CALLFUNC':
-                func = self.table.getFuncVar(node.id.value)
-                prog = func['val']
-                if node.args:
-                    args = func['args']
-                    backup = self.table
-                    newtable = Table(self.error)
-                    any(map(lambda x: newtable.setVar(args[x[0]], self.run(x[1])), list(enumerate(node.args))))
-                    self.table += newtable
-                    list(map(self.run, prog))
-                    self.table = backup
-                    return
-                
+        elif node.eval == 'BINOP':
+            return binOp(node.lst, eval[node.op.type], stack)
+        elif node.eval == 'BOOL':
+            return 'NIL' if  binOp(node.lst, eval[node.op.type], stack) == 'NIL' else 'T'
+        elif node.eval == 'PRINT':
+            return eval[node.op.type](*init(node.lst, stack))
+        elif node.eval == 'CONDITION':
+            return run(eval[node.op.type](run(node.cond, stack), node.lst[0], node.lst[1]), stack)
 
+        elif node.eval == 'SETVAR':
+            print(node)
+            return stack.varadd(node.id.value, run(node.val, stack))
+
+
+        elif node.eval == 'SETFUNC':
+            return stack.funcadd(node.id.value, node.args, node.val)
+
+
+        elif node.eval == 'VAR':
+
+            func = stack.funcget(node.lst[0].value)
+            if func == "func not exist": print('func not exist')
+            args = []
+            if func[0] or len(node.lst) > 1:
+                if not func[0]:
+                    print('To many args')
+                else:
+ 
+                    args = func[0].lst
+                    if len(args) > len(node.lst)-1:
+                        print('To few args')
+                    elif len(args) < len(node.lst)-1:
+                        print('To many args')
+                    else:
+                        list(map(lambda x,y: stack.varadd(x.value, run(y, stack)), args, node.lst[1:]))
+            tmp = init(func[1], stack)
+            if args:
+                stack.removevar(len(args))
+            return tmp
                     
-                    
-            elif node.eval == 'EMPTY':
-                print("EMPTY NODE")
+     
+        elif node.eval == 'EMPTY':
+            print("EMPTY NODE")
 
-        if isinstance(node, Token):
-            if node.type == 'VAR':
-                return self.table.getVar(node)
+    if isinstance(node, Token):
+        if node.type == 'VAR':
+            return stack.varget(node.value)
 
 
-        return node
+    return node

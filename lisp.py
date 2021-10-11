@@ -1,11 +1,13 @@
+from src.Lexer import *
+from src.Parser import *
 from src.Interpreter import *
-import sys
 
 def main():
     f = open('test.lsp', 'r')
     code = f.read()
-    preter = Interpreter(code)
-    list(map(preter.run, preter.tree))
+    tokens = tokenize(code)
+    tree = create_nodes(tokens)
+    run(tree)
 
 
 
